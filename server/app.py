@@ -52,8 +52,44 @@ class Scientists(Resource):
 
 api.add_resource(Scientists, "/scientists")
 
-class SceinetistId(Resource):
-    pass 
+class ScientistId(Resource):
+       
+       def get(self, id):
+        scientist = Scientist.query.filter(Scientist.id == id).one_or_none()
+
+        if scientist is None:
+            return make_response({'error': 'Scientist not found'}, 404)
+        
+       def patch(self, id):
+        scientist = Scientist.query.filter(Scientist.id == id).one_or_none()
+
+        if scientist is None:
+            return make_response({'error': 'Scientist not found'}, 404)
+
+        fields = request.get_json()
+
+        try:
+            for field in fields:
+                setattr(scientist, field, fields[field])
+            db.session.add(scientist)
+            db.session.commit()
+
+            return make_response(scientist.to_dict(rules=('-planets', '-missions')), 202)
+
+        except ValueError:
+            return make_response({"errors": ["validation errors"]}, 400)
+
+       def delete(self, id):
+        scientist = Scientist.query.filter(Scientist.id == id).one_or_none()
+
+        if scientist is None:
+            return make_response({'error': 'Scientist not found'}, 404)
+
+        db.session.delete(scientist)
+        db.session.commit()
+        return make_response({}, 204)
+
+api.add_resource(ScientistId, "/scientists/<int:id>")
 
 class Planets(Resource):
     pass 
